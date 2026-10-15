@@ -57,5 +57,49 @@ A short description of the project.
     └── plots.py                <- Code to create visualizations
 ```
 
+## Preparação dos dados
+
+A preparação utiliza o **Brazilian E-Commerce Public Dataset by Olist, versão 2**, com foco nos títulos e comentários das avaliações.
+
+| Notebook | Responsabilidade |
+|---|---|
+| `notebooks/Limpeza_dados_Reviews.ipynb` | Seleção das avaliações com conteúdo textual, limpeza dos textos e validação dos campos. |
+| `notebooks/Preparacao_dados_complementares.ipynb` | Preparação de informações dos pedidos e enriquecimento das avaliações. |
+
+### Resultados gerados
+
+Os arquivos estão em `data/processed/`:
+
+| Arquivo | Conteúdo |
+|---|---|
+| `olist_reviews_preparados.csv` | **42.687 avaliações** com título ou comentário preenchido, incluindo os textos originais e suas versões limpas. |
+| `olist_metadados_pedidos.csv` | Informações de pedidos, localização, categorias e pagamentos, organizadas por pedido. |
+| `olist_reviews_com_metadados.csv` | Avaliações preparadas associadas aos dados complementares. |
+
+As junções preservaram as **42.687 avaliações**. O par `review_id` + `order_id` foi validado como único nessa base.
+
+### Reprodução
+
+Instale a dependência de acesso ao dataset:
+
+```bash
+pip install "kagglehub[pandas-datasets]"
+```
+
+Execute primeiro o notebook de limpeza dos reviews e depois o de dados complementares, a partir da pasta `notebooks/`.
+
+O carregamento é feito pelo `kagglehub`, com reutilização do cache local. Caso seja solicitada autenticação, utilize `kagglehub.login()` sem incluir credenciais no repositório.
+
+### Documentação
+
+As decisões de tratamento, validações, resultados e limitações estão documentadas nos notebooks e nos arquivos:
+
+- [Resumo da preparação dos reviews](docs/resumo_preparacao.md)
+- [Resumo da preparação dos dados complementares](docs/resumo_metadados.md)
+
+As oito tabelas adicionais foram disponibilizadas separadamente em `data/raw/`, sem tratamentos.
+
+> Os CSVs preparados estão versionados em `data/processed/` e podem ser utilizados diretamente. Os dados originais de `data/raw/` não são versionados; podem ser obtidos pelo `kagglehub`, conforme o carregamento dos notebooks.
+
 --------
 
