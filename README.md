@@ -101,5 +101,52 @@ As oito tabelas adicionais foram disponibilizadas separadamente em `data/raw/`, 
 
 > Os CSVs preparados estão versionados em `data/processed/` e podem ser utilizados diretamente. Os dados originais de `data/raw/` não são versionados; podem ser obtidos pelo `kagglehub`, conforme o carregamento dos notebooks.
 
+## Base de conhecimento (vector store) e LLM
+
+Embeddings e geração usam o **Gemini**, o mesmo provedor do RAG. Os vetores ficam no **ChromaDB**, persistido em `data/vector_store/`. Essa pasta não é versionada e pode ser gerada de novo a qualquer momento.
+
+| Componente | Escolha |
+|---|---|
+| Embeddings | `gemini-embedding-001` (768 dimensões) |
+| LLM | `gemini-2.5-flash` |
+| Vector store | ChromaDB, distância de cosseno |
+| Unidade | 1 avaliação = 1 documento (sem chunking), com os dados do pedido como metadados |
+
+### Código (`tech_challenge_fase4/`)
+
+| Módulo | Responsabilidade |
+|---|---|
+| `config.py` | Caminhos, modelos e parâmetros (podem ser alterados por variáveis de ambiente) |
+| `documentos.py` | Converte `olist_reviews_com_metadados.csv` em documentos e metadados |
+| `embeddings.py` | Cliente Gemini, envio em lotes, novas tentativas e normalização |
+| `vector_store.py` | Criação e indexação retomável no ChromaDB (também funciona pela linha de comando) |
+| `retriever.py` | `buscar()` com filtros e `responder()` (RAG de referência) |
+| `avaliacao.py` | Consultas de teste e precisão@k |
+
+### Como gerar
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env            # preencha GEMINI_API_KEY
+make test                       # testes sem chamar a API
+python -m tech_challenge_fase4.vector_store --limite 500   # amostra
+make vector_store               # base completa (retomável)
+make avaliar                    # avaliação da recuperação
+```
+
+O notebook `notebooks/2.0-construcao-vector-store.ipynb` executa o mesmo fluxo passo a passo.
+
+### Uso pelo RAG
+
+```python
+from tech_challenge_fase4.retriever import buscar, responder
+
+buscar("atraso na entrega", k=5, filtros={"customer_state": "SP"})
+buscar("produto quebrado", filtros={"review_score": {"$lte": 2}, "entrega_atrasada": True})
+responder("Quais as principais reclamações sobre entrega?")
+```
+
+Metadados disponíveis para filtro: `review_score`, `entrega_atrasada`, `dias_atraso`, `order_status`, `customer_state`, `customer_city`, `categoria_principal`, `categorias_pedido`, `formas_pagamento`, `valor_pago_pedido`, `review_ano_mes` (ex.: `201804`), `tem_titulo`.
+
 --------
 

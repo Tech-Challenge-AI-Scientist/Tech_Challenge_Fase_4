@@ -2,7 +2,7 @@
 # GLOBALS                                                                       #
 #################################################################################
 
-PROJECT_NAME = project_name
+PROJECT_NAME = tech_challenge_fase4
 PYTHON_VERSION = 3.10
 PYTHON_INTERPRETER = python
 
@@ -30,15 +30,15 @@ clean:
 ## Lint using flake8, black, and isort (use `make format` to do formatting)
 .PHONY: lint
 lint:
-	flake8 project_name
-	isort --check --diff project_name
-	black --check project_name
+	flake8 tech_challenge_fase4 tests
+	isort --check --diff tech_challenge_fase4 tests
+	black --check tech_challenge_fase4 tests
 
 ## Format source code with black
 .PHONY: format
 format:
-	isort project_name
-	black project_name
+	isort tech_challenge_fase4 tests
+	black tech_challenge_fase4 tests
 
 
 
@@ -58,6 +58,21 @@ create_environment:
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
+
+## Run unit tests (no Gemini API calls)
+.PHONY: test
+test:
+	$(PYTHON_INTERPRETER) -m pytest -q
+
+## Build the ChromaDB vector store with Gemini embeddings (resumable)
+.PHONY: vector_store
+vector_store:
+	$(PYTHON_INTERPRETER) -m tech_challenge_fase4.vector_store
+
+## Evaluate retrieval quality with the test queries
+.PHONY: avaliar
+avaliar:
+	$(PYTHON_INTERPRETER) -m tech_challenge_fase4.avaliacao
 
 
 
