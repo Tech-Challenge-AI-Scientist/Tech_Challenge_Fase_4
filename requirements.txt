@@ -1,6 +1,20 @@
+# Dados
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+kagglehub[pandas-datasets]
+
+# LLM e vector store
+google-genai>=1.30
+chromadb>=1.0
+python-dotenv>=1.0
+tqdm>=4.66
+
+# Desenvolvimento
+pytest>=8.0
 black
 flake8
 isort
 pip
-python-dotenv
+
 -e .
