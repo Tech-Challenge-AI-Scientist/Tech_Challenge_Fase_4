@@ -24,7 +24,7 @@ VECTOR_STORE_DIR = Path(os.getenv("VECTOR_STORE_DIR", DATA_DIR / "vector_store")
 GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
 EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", "768"))
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-2.5-flash")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.5-flash")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
 # Vector store
