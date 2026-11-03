@@ -103,7 +103,7 @@ As oito tabelas adicionais foram disponibilizadas separadamente em `data/raw/`, 
 
 ## Base de conhecimento (vector store) e LLM
 
-Embeddings e geração usam o **Gemini**, o mesmo provedor do RAG. Os vetores ficam no **ChromaDB**, persistido em `data/vector_store/`. Essa pasta não é versionada e pode ser gerada de novo a qualquer momento.
+Embeddings e geração usam o **Gemini**. Os vetores ficam no **ChromaDB**, persistido em `data/vector_store/`. Essa pasta não é versionada e pode ser gerada de novo a qualquer momento.
 
 | Componente | Escolha |
 |---|---|
@@ -111,6 +111,46 @@ Embeddings e geração usam o **Gemini**, o mesmo provedor do RAG. Os vetores fi
 | LLM | `gemini-2.5-flash` |
 | Vector store | ChromaDB, distância de cosseno |
 | Unidade | 1 avaliação = 1 documento (sem chunking), com os dados do pedido como metadados |
+
+## RAG (Retrieval-Augmented Generation)
+
+A RAG tem como função responder perguntas a respeito das avaliações feitas pelos clientes. Além de analisar as avaliações, a RAG também é capaz de gerar insights a respeito de outros dados das mesmas, como a nota da avaliação e a categoria dos produtos. A RAG não usa conhecimento externo nem inventa dados, avisando quando o contexto não basta para responder. Cumprimentos e perguntas do tipo "quem é você" são respondidos sem citar avaliações.
+
+Alguns exemplos de perguntas que podem ser feitas à RAG são:
+
+- Qual é o motivo mais frequente de insatisfação dos clientes?
+- Em entregas bem avaliadas, quais são os elogios feitos com mais frequência?
+- Qual é a nota média das avaliações?
+- Quais são as categorias de produtos mais problemáticas?
+
+#### Modelo
+
+A RAG utiliza os modelos da família flash do Gemini, por serem modelos relativamente baratos (além de contarem com uma free trial diária no Google AI Studio) e muito eficazes nesta tarefa em específico. Por padrão, está configurado o modelo gemini-3.5-flash, porém, pode ser substituído por outras versões do mesmo, como a 3.6, 3.7 e 3.8.
+
+#### Funcionamento
+
+1. A pergunta vira um embedding (RETRIEVAL_QUERY, 768 dimensões).
+2. As k avaliações mais parecidas são buscadas no ChromaDB.
+3. O contexto é montado com as avaliações numeradas por [n], cada uma com nota, situação da entrega e categoria. A resposta cita as avaliações como [n], e no final aparece uma legenda que liga cada número ao review_id e ao order_id reais.
+
+Obs: Por fins de custo e performance, a RAG utiliza apenas uma amostra (k) das avaliações. Na sessão "executando a RAG", é possível verificar como alterar o número de avaliações recuperadas.
+
+#### Executando a RAG
+
+Antes de executar, é necessário configurar a variável de ambiente GEMINI_API_KEY com a sua chave de API do Gemini, chave esta que é configurável pelo painel do Google AI Studio.
+
+```bash
+python -m tech_challenge_fase4.rag
+```
+
+Opcionalmente, podem ser configurados os seguintes parâmetros:
+
+- --k: quantas avaliações são recuperadas por pergunta (padrão 30).
+- --timeout: tempo limite de cada chamada ao Gemini (padrão 300 s).
+- --debug: mostra logs detalhados, inclusive as requisições HTTP.
+
+Para encerrar a sessão, basta digitar "sair", "exit" ou "quit".
+
 
 ### Código (`tech_challenge_fase4/`)
 
@@ -122,16 +162,32 @@ Embeddings e geração usam o **Gemini**, o mesmo provedor do RAG. Os vetores fi
 | `vector_store.py` | Criação e indexação retomável no ChromaDB (também funciona pela linha de comando) |
 | `retriever.py` | `buscar()` com filtros e `responder()` (RAG de referência) |
 | `avaliacao.py` | Consultas de teste e precisão@k |
+| `rag.py` | Script da RAG, executável via terminal |
 
 ### Como gerar
 
+#### Linux
 ```bash
-pip install -r requirements.txt
+python -m venv .venv            # criar o ambiente virtual (uma vez só)
+source .venv/bin/activate       # ativa o ambiente
+pip install -r requirements.txt # instala as dependências
 cp .env.example .env            # preencha GEMINI_API_KEY
 make test                       # testes sem chamar a API
 python -m tech_challenge_fase4.vector_store --limite 500   # amostra
 make vector_store               # base completa (retomável)
 make avaliar                    # avaliação da recuperação
+```
+
+#### Windows
+```bash
+python -m venv .venv            # criar o ambiente virtual (uma vez só)
+.\.venv\Scripts\Activate.ps1    # ativa o ambiente
+pip install -r requirements.txt # instala as dependências
+cp .env.example .env            # preencha GEMINI_API_KEY
+python -m tech_challenge_fase4.test                       # testes sem chamar a API
+python -m tech_challenge_fase4.vector_store --limite 500  # amostra
+python -m tech_challenge_fase4.vector_store               # base completa (retomável)
+python -m tech_challenge_fase4.avaliacao                  # avaliação da recuperação
 ```
 
 O notebook `notebooks/2.0-construcao-vector-store.ipynb` executa o mesmo fluxo passo a passo.
