@@ -18,7 +18,9 @@ load_dotenv(PROJ_ROOT / ".env")
 DATA_DIR = PROJ_ROOT / "data"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 REVIEWS_PATH = PROCESSED_DATA_DIR / "olist_reviews_com_metadados.csv"
-VECTOR_STORE_DIR = Path(os.getenv("VECTOR_STORE_DIR", DATA_DIR / "vector_store"))
+VECTOR_STORE_DIR = Path(
+    os.getenv("VECTOR_STORE_DIR", DATA_DIR / "vector_store")
+)
 
 # Modelos Gemini
 GEMINI_API_KEY_ENV = "GEMINI_API_KEY"
@@ -28,6 +30,10 @@ LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3.5-flash")
 LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
 # Vector store
-COLLECTION_NAME = os.getenv("COLLECTION_NAME", f"olist_reviews_{EMBEDDING_DIM}d")
-EMBEDDING_BATCH_SIZE = int(os.getenv("EMBEDDING_BATCH_SIZE", "100"))  # limite da API: 100
+COLLECTION_NAME = os.getenv(
+    "COLLECTION_NAME", f"olist_reviews_{EMBEDDING_DIM}d"
+)
+EMBEDDING_BATCH_SIZE = int(
+    os.getenv("EMBEDDING_BATCH_SIZE", "100")
+)  # limite da API: 100
 DEFAULT_TOP_K = 5

@@ -32,11 +32,15 @@ class Documento:
     metadados: dict = field(default_factory=dict)
 
 
-def carregar_reviews(caminho: Path | str = config.REVIEWS_PATH) -> pd.DataFrame:
+def carregar_reviews(
+    caminho: Path | str = config.REVIEWS_PATH,
+) -> pd.DataFrame:
     df = pd.read_csv(caminho, dtype={"review_id": str, "order_id": str})
     faltantes = [c for c in COLUNAS_OBRIGATORIAS if c not in df.columns]
     if faltantes:
-        raise ValueError(f"Colunas obrigatórias ausentes em {caminho}: {faltantes}")
+        raise ValueError(
+            f"Colunas obrigatórias ausentes em {caminho}: {faltantes}"
+        )
     return df
 
 
@@ -73,9 +77,14 @@ def _ano_mes(data) -> int | None:
 
 
 def montar_metadados(linha: dict) -> dict:
-    """Metadados compatíveis com o Chroma (str, int, float, bool; sem nulos)."""
+    """Metadados compatíveis com o Chroma (str, int, float, bool; sem nulos).
+
+    Os valores nulos são removidos antes de enviar os metadados ao Chroma.
+    """
     categorias = linha.get("categorias_pedido")
-    categoria_principal = None if _vazio(categorias) else str(categorias).split("|")[0].strip()
+    categoria_principal = (
+        None if _vazio(categorias) else str(categorias).split("|")[0].strip()
+    )
 
     dias_atraso = linha.get("dias_atraso")
     valor_pago = linha.get("valor_pago_pedido")
@@ -113,14 +122,21 @@ def construir_documentos(df: pd.DataFrame) -> list[Documento]:
     documentos = []
     for linha in df.to_dict(orient="records"):
         texto = montar_texto(
-            linha.get("review_comment_title_clean"), linha.get("review_comment_message_clean")
+            linha.get("review_comment_title_clean"),
+            linha.get("review_comment_message_clean"),
         )
         if not texto:
             continue
         doc_id = f"{linha['review_id']}_{linha['order_id']}"
-        documentos.append(Documento(id=doc_id, texto=texto, metadados=montar_metadados(linha)))
+        documentos.append(
+            Documento(
+                id=doc_id, texto=texto, metadados=montar_metadados(linha)
+            )
+        )
 
     ids = [d.id for d in documentos]
     if len(ids) != len(set(ids)):
-        raise ValueError("Há ids de documento duplicados (review_id + order_id).")
+        raise ValueError(
+            "Há ids de documento duplicados (review_id + order_id)."
+        )
     return documentos

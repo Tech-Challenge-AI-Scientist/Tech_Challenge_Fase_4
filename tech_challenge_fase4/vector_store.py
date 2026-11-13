@@ -62,7 +62,7 @@ def indexar(
     tamanho_lote: int = config.EMBEDDING_BATCH_SIZE,
     mostrar_progresso: bool = True,
 ) -> int:
-    """Embeda e grava os documentos ainda ausentes da coleção. Retorna quantos gravou."""
+    """Grava os documentos ainda ausentes e retorna a quantidade indexada."""
     existentes = ids_existentes(colecao)
     pendentes = [d for d in documentos if d.id not in existentes]
     logger.info(
@@ -93,7 +93,9 @@ def indexar(
 
 
 def construir_vector_store(
-    limite: int | None = None, recriar: bool = False, embedder: Embedder | None = None
+    limite: int | None = None,
+    recriar: bool = False,
+    embedder: Embedder | None = None,
 ):
     if embedder is None:
         from tech_challenge_fase4.embeddings import GeminiEmbedder
@@ -105,19 +107,34 @@ def construir_vector_store(
         documentos = documentos[:limite]
     colecao = obter_colecao(recriar=recriar)
     gravados = indexar(documentos, colecao, embedder)
-    logger.info("Gravados nesta execução: %d. Total na coleção: %d.", gravados, colecao.count())
+    logger.info(
+        "Gravados nesta execução: %d. Total na coleção: %d.",
+        gravados,
+        colecao.count(),
+    )
     return colecao
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Constrói o vector store das avaliações Olist.")
-    parser.add_argument(
-        "--limite", type=int, default=None, help="Indexa só os N primeiros documentos."
+    parser = argparse.ArgumentParser(
+        description="Constrói o vector store das avaliações Olist."
     )
-    parser.add_argument("--recriar", action="store_true", help="Apaga a coleção antes de indexar.")
+    parser.add_argument(
+        "--limite",
+        type=int,
+        default=None,
+        help="Indexa só os N primeiros documentos.",
+    )
+    parser.add_argument(
+        "--recriar",
+        action="store_true",
+        help="Apaga a coleção antes de indexar.",
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
     construir_vector_store(limite=args.limite, recriar=args.recriar)
 
 

@@ -17,10 +17,14 @@ from tech_challenge_fase4 import config
 from tech_challenge_fase4.embeddings import Embedder
 
 INSTRUCAO_SISTEMA = (
-    "Você é um analista de experiência do cliente de um e-commerce brasileiro. "
-    "Responda em português usando SOMENTE as avaliações de clientes fornecidas no contexto. "
-    "Se o contexto não for suficiente para responder, diga isso claramente. "
-    "Ao afirmar algo, cite os identificadores das avaliações entre colchetes, ex.: [3]. "
+    "Você é um analista de experiência do cliente de um e-commerce "
+    "brasileiro. "
+    "Responda em português usando SOMENTE as avaliações de clientes "
+    "fornecidas no contexto. "
+    "Se o contexto não for suficiente para responder, diga isso "
+    "claramente. "
+    "Ao afirmar algo, cite os identificadores das avaliações entre "
+    "colchetes, ex.: [3]. "
     "Não invente dados, números ou avaliações."
 )
 
@@ -40,10 +44,11 @@ def _embedder_padrao():
 
 
 def montar_where(filtros: dict | None) -> dict | None:
-    """Converte ``{"campo": valor, ...}`` no formato ``where`` do Chroma.
+    """Converte filtros de campo e valor para o formato ``where`` do Chroma.
 
     Valores podem ser literais (igualdade) ou operadores do Chroma, ex.:
-    ``{"review_score": {"$lte": 2}}``. Vários campos são combinados com ``$and``.
+    ``{"review_score": {"$lte": 2}}``. Vários campos são combinados
+    com ``$and``.
     Um dicionário que já começa com ``$and``/``$or`` é repassado sem mudanças.
     """
     if not filtros:
@@ -66,7 +71,7 @@ def buscar(
 ) -> list[dict]:
     """Retorna as k avaliações mais similares à consulta.
 
-    Cada item tem ``id``, ``texto``, ``metadados`` e ``similaridade`` (cosseno, 0–1).
+    Cada item contém id, texto, metadados e similaridade (cosseno, de 0 a 1).
     """
     colecao = colecao or _colecao_padrao()
     embedder = embedder or _embedder_padrao()
@@ -78,7 +83,12 @@ def buscar(
         include=["documents", "metadatas", "distances"],
     )
     return [
-        {"id": id_, "texto": texto, "metadados": meta, "similaridade": round(1 - dist, 4)}
+        {
+            "id": id_,
+            "texto": texto,
+            "metadados": meta,
+            "similaridade": round(1 - dist, 4),
+        }
         for id_, texto, meta, dist in zip(
             resultado["ids"][0],
             resultado["documents"][0],
@@ -94,8 +104,16 @@ def formatar_contexto(resultados: list[dict]) -> str:
         m = r["metadados"]
         detalhes = [f"nota {m.get('review_score')}"]
         if "entrega_atrasada" in m:
-            detalhes.append("entrega atrasada" if m["entrega_atrasada"] else "entrega no prazo")
-        for campo in ("categoria_principal", "customer_state", "review_creation_date"):
+            detalhes.append(
+                "entrega atrasada"
+                if m["entrega_atrasada"]
+                else "entrega no prazo"
+            )
+        for campo in (
+            "categoria_principal",
+            "customer_state",
+            "review_creation_date",
+        ):
             if campo in m:
                 detalhes.append(str(m[campo]))
         blocos.append(f"[{i}] ({'; '.join(detalhes)})\n{r['texto']}")
@@ -111,27 +129,33 @@ def responder(
     cliente=None,
     modelo: str = config.LLM_MODEL,
 ) -> dict:
-    """RAG mínimo de referência: recupera avaliações e gera a resposta com o Gemini."""
+    """Recupera avaliações e gera uma resposta com o Gemini."""
     from google.genai import types
 
     from tech_challenge_fase4.embeddings import obter_cliente_gemini
 
-    resultados = buscar(pergunta, k=k, filtros=filtros, colecao=colecao, embedder=embedder)
+    resultados = buscar(
+        pergunta, k=k, filtros=filtros, colecao=colecao, embedder=embedder
+    )
     if not resultados:
         return {
-            "resposta": "Nenhuma avaliação encontrada para os filtros informados.",
+            "resposta": (
+                "Nenhuma avaliação encontrada " "para os filtros informados."
+            ),
             "fontes": [],
         }
 
     cliente = cliente or obter_cliente_gemini()
     prompt = (
-        f"Avaliações de clientes:\n\n{formatar_contexto(resultados)}\n\n" f"Pergunta: {pergunta}"
+        f"Avaliações de clientes:\n\n{formatar_contexto(resultados)}\n\n"
+        f"Pergunta: {pergunta}"
     )
     resposta = cliente.models.generate_content(
         model=modelo,
         contents=prompt,
         config=types.GenerateContentConfig(
-            system_instruction=INSTRUCAO_SISTEMA, temperature=config.LLM_TEMPERATURE
+            system_instruction=INSTRUCAO_SISTEMA,
+            temperature=config.LLM_TEMPERATURE,
         ),
     )
     return {"resposta": resposta.text, "fontes": resultados}

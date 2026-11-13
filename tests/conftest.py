@@ -18,7 +18,10 @@ class FakeEmbedder:
     def _vetor(self, texto: str) -> list[float]:
         v = np.zeros(self.dimensao)
         for palavra in re.findall(r"\w+", texto.lower()):
-            v[int(hashlib.md5(palavra.encode()).hexdigest(), 16) % self.dimensao] += 1
+            v[
+                int(hashlib.md5(palavra.encode()).hexdigest(), 16)
+                % self.dimensao
+            ] += 1
         return v
 
     def embed_documentos(self, textos):
@@ -54,8 +57,20 @@ def df_reviews():
             "entrega_atrasada": [True, False, None, False, False],
             "dias_atraso": [5.0, -10.0, None, -2.0, -1.0],
             "customer_state": ["SP", "RJ", "SP", "SP", "MG"],
-            "customer_city": ["sao paulo", "rio de janeiro", "campinas", "santos", "bh"],
-            "categorias_pedido": ["bebes | cool_stuff", "esporte_lazer", None, "moveis", "artes"],
+            "customer_city": [
+                "sao paulo",
+                "rio de janeiro",
+                "campinas",
+                "santos",
+                "bh",
+            ],
+            "categorias_pedido": [
+                "bebes | cool_stuff",
+                "esporte_lazer",
+                None,
+                "moveis",
+                "artes",
+            ],
             "formas_pagamento": ["boleto"] * 5,
             "valor_pago_pedido": [100.0, 50.5, 20.0, 20.0, 10.0],
         }

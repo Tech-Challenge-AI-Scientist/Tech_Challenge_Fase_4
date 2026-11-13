@@ -7,7 +7,10 @@ from tech_challenge_fase4.documentos import (
 
 
 def test_montar_texto():
-    assert montar_texto("Ótimo", "chegou rápido") == "Título: Ótimo\nComentário: chegou rápido"
+    assert (
+        montar_texto("Ótimo", "chegou rápido")
+        == "Título: Ótimo\nComentário: chegou rápido"
+    )
     assert montar_texto(None, "chegou rápido") == "Comentário: chegou rápido"
     assert montar_texto(float("nan"), "  ") == ""
 

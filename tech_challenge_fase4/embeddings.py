@@ -21,13 +21,17 @@ CODIGOS_REPETIVEIS = {429, 500, 502, 503, 504}
 class Embedder(Protocol):
     dimensao: int
 
-    def embed_documentos(self, textos: Sequence[str]) -> list[list[float]]: ...
+    def embed_documentos(self, textos: Sequence[str]) -> list[list[float]]:
+        """Gera embeddings para os textos dos documentos."""
+        ...
 
-    def embed_consulta(self, texto: str) -> list[float]: ...
+    def embed_consulta(self, texto: str) -> list[float]:
+        """Gera um embedding para a consulta."""
+        ...
 
 
 def normalizar(vetores: Sequence[Sequence[float]]) -> list[list[float]]:
-    """Normaliza em L2. Necessário para dimensões < 3072 no gemini-embedding-001."""
+    """Normaliza em L2 para dimensões < 3072 no gemini-embedding-001."""
     matriz = np.asarray(vetores, dtype=np.float32)
     normas = np.linalg.norm(matriz, axis=1, keepdims=True)
     normas[normas == 0] = 1.0
@@ -40,7 +44,8 @@ def obter_cliente_gemini(api_key: str | None = None):
     api_key = api_key or os.getenv(config.GEMINI_API_KEY_ENV)
     if not api_key:
         raise RuntimeError(
-            f"Defina a variável {config.GEMINI_API_KEY_ENV} (no ambiente ou no arquivo .env)."
+            f"Defina a variável {config.GEMINI_API_KEY_ENV} "
+            "(no ambiente ou no arquivo .env)."
         )
     return genai.Client(api_key=api_key)
 
@@ -62,10 +67,14 @@ class GeminiEmbedder:
         self.max_tentativas = max_tentativas
         self.cliente = cliente or obter_cliente_gemini()
 
-    def _chamar_api(self, textos: Sequence[str], task_type: str) -> list[list[float]]:
+    def _chamar_api(
+        self, textos: Sequence[str], task_type: str
+    ) -> list[list[float]]:
         from google.genai import errors, types
 
-        cfg = types.EmbedContentConfig(task_type=task_type, output_dimensionality=self.dimensao)
+        cfg = types.EmbedContentConfig(
+            task_type=task_type, output_dimensionality=self.dimensao
+        )
         for tentativa in range(1, self.max_tentativas + 1):
             try:
                 resposta = self.cliente.models.embed_content(
@@ -73,11 +82,15 @@ class GeminiEmbedder:
                 )
                 return normalizar([e.values for e in resposta.embeddings])
             except errors.APIError as erro:
-                if erro.code not in CODIGOS_REPETIVEIS or tentativa == self.max_tentativas:
+                if (
+                    erro.code not in CODIGOS_REPETIVEIS
+                    or tentativa == self.max_tentativas
+                ):
                     raise
                 espera = min(60, 2**tentativa) + random.uniform(0, 1)
                 logger.warning(
-                    "Erro %s na API (tentativa %d/%d). Nova tentativa em %.0fs.",
+                    "Erro %s na API (tentativa %d/%d). "
+                    "Nova tentativa em %.0fs.",
                     erro.code,
                     tentativa,
                     self.max_tentativas,
@@ -90,7 +103,9 @@ class GeminiEmbedder:
         vetores = []
         for i in range(0, len(textos), self.tamanho_lote):
             vetores.extend(
-                self._chamar_api(textos[i : i + self.tamanho_lote], "RETRIEVAL_DOCUMENT")
+                self._chamar_api(
+                    textos[i : i + self.tamanho_lote], "RETRIEVAL_DOCUMENT"
+                )
             )
         return vetores
 

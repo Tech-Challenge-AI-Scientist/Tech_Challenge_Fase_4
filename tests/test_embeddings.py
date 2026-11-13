@@ -9,7 +9,10 @@ from tech_challenge_fase4.embeddings import GeminiEmbedder, normalizar
 
 
 class ClienteFalso:
-    """Imita client.models.embed_content; falha nas primeiras chamadas se pedido."""
+    """Imita client.models.embed_content.
+
+    Pode falhar nas primeiras chamadas, quando solicitado.
+    """
 
     def __init__(self, falhas=0, codigo=429):
         self.falhas, self.codigo, self.chamadas = falhas, codigo, []
@@ -19,9 +22,13 @@ class ClienteFalso:
         self.chamadas.append((model, list(contents), config))
         if self.falhas:
             self.falhas -= 1
-            raise errors.APIError(self.codigo, {"error": {"message": "falha simulada"}})
+            raise errors.APIError(
+                self.codigo, {"error": {"message": "falha simulada"}}
+            )
         vetor = [3.0] + [4.0] + [0.0] * (config.output_dimensionality - 2)
-        return SimpleNamespace(embeddings=[SimpleNamespace(values=vetor) for _ in contents])
+        return SimpleNamespace(
+            embeddings=[SimpleNamespace(values=vetor) for _ in contents]
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +43,9 @@ def test_normalizar():
 
 def test_lotes_task_type_e_normalizacao():
     cliente = ClienteFalso()
-    emb = GeminiEmbedder(modelo="m", dimensao=8, tamanho_lote=2, cliente=cliente)
+    emb = GeminiEmbedder(
+        modelo="m", dimensao=8, tamanho_lote=2, cliente=cliente
+    )
     vetores = emb.embed_documentos(["a", "b", "c"])
     assert len(vetores) == 3 and len(vetores[0]) == 8
     assert np.isclose(np.linalg.norm(vetores[0]), 1.0)

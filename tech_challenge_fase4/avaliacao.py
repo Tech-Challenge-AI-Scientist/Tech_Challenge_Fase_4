@@ -41,20 +41,36 @@ CONSULTAS_TESTE = [
         "atrasada ou nota ≤ 2",
     ),
     ConsultaTeste("ainda não recebi o produto", _nota_baixa, "nota ≤ 2"),
-    ConsultaTeste("produto veio quebrado, danificado", _nota_baixa, "nota ≤ 2"),
-    ConsultaTeste("recebi o produto errado, diferente do anunciado", _nota_baixa, "nota ≤ 2"),
+    ConsultaTeste(
+        "produto veio quebrado, danificado", _nota_baixa, "nota ≤ 2"
+    ),
+    ConsultaTeste(
+        "recebi o produto errado, diferente do anunciado",
+        _nota_baixa,
+        "nota ≤ 2",
+    ),
     ConsultaTeste("veio faltando itens no pedido", _nota_baixa, "nota ≤ 2"),
-    ConsultaTeste("quero meu dinheiro de volta, cancelamento", _nota_baixa, "nota ≤ 2"),
-    ConsultaTeste("produto de má qualidade, não recomendo", _nota_baixa, "nota ≤ 2"),
+    ConsultaTeste(
+        "quero meu dinheiro de volta, cancelamento", _nota_baixa, "nota ≤ 2"
+    ),
+    ConsultaTeste(
+        "produto de má qualidade, não recomendo", _nota_baixa, "nota ≤ 2"
+    ),
     ConsultaTeste(
         "chegou antes do prazo, entrega rápida",
         lambda m: m.get("entrega_atrasada") is False and _nota_alta(m),
         "no prazo e nota ≥ 4",
     ),
-    ConsultaTeste("produto excelente, recomendo a loja", _nota_alta, "nota ≥ 4"),
-    ConsultaTeste("bem embalado e conforme a descrição", _nota_alta, "nota ≥ 4"),
+    ConsultaTeste(
+        "produto excelente, recomendo a loja", _nota_alta, "nota ≥ 4"
+    ),
+    ConsultaTeste(
+        "bem embalado e conforme a descrição", _nota_alta, "nota ≥ 4"
+    ),
     ConsultaTeste("ótimo custo benefício", _nota_alta, "nota ≥ 4"),
-    ConsultaTeste("atendimento do vendedor não responde", _nota_baixa, "nota ≤ 2"),
+    ConsultaTeste(
+        "atendimento do vendedor não responde", _nota_baixa, "nota ≤ 2"
+    ),
     ConsultaTeste(
         "reclamação de atraso na entrega",
         lambda m: m.get("customer_state") == "RJ",
@@ -70,12 +86,20 @@ CONSULTAS_TESTE = [
 ]
 
 
-def avaliar(k: int = 10, consultas=CONSULTAS_TESTE, colecao=None, embedder=None) -> pd.DataFrame:
+def avaliar(
+    k: int = 10, consultas=CONSULTAS_TESTE, colecao=None, embedder=None
+) -> pd.DataFrame:
     from tech_challenge_fase4.retriever import buscar
 
     linhas = []
     for c in consultas:
-        resultados = buscar(c.consulta, k=k, filtros=c.filtros, colecao=colecao, embedder=embedder)
+        resultados = buscar(
+            c.consulta,
+            k=k,
+            filtros=c.filtros,
+            colecao=colecao,
+            embedder=embedder,
+        )
         relevantes = sum(c.relevante(r["metadados"]) for r in resultados)
         linhas.append(
             {
@@ -83,9 +107,15 @@ def avaliar(k: int = 10, consultas=CONSULTAS_TESTE, colecao=None, embedder=None)
                 "criterio": c.descricao,
                 f"precisao@{k}": relevantes / max(len(resultados), 1),
                 "similaridade_media": round(
-                    sum(r["similaridade"] for r in resultados) / max(len(resultados), 1), 3
+                    sum(r["similaridade"] for r in resultados)
+                    / max(len(resultados), 1),
+                    3,
                 ),
-                "top1": resultados[0]["texto"].replace("\n", " | ") if resultados else "",
+                "top1": (
+                    resultados[0]["texto"].replace("\n", " | ")
+                    if resultados
+                    else ""
+                ),
             }
         )
     return pd.DataFrame(linhas)
@@ -96,9 +126,12 @@ def main() -> None:
     pd.set_option("display.width", 200)
     df = avaliar()
     print(df.to_string(index=False))
-    print(f"\nPrecisão média: {df.filter(like='precisao').iloc[:, 0].mean():.2%}")
     print(
-        f"Coleção: {config.COLLECTION_NAME} | modelo: {config.EMBEDDING_MODEL} ({config.EMBEDDING_DIM}d)"
+        f"\nPrecisão média: {df.filter(like='precisao').iloc[:, 0].mean():.2%}"
+    )
+    print(
+        f"Coleção: {config.COLLECTION_NAME} | modelo: "
+        f"{config.EMBEDDING_MODEL} ({config.EMBEDDING_DIM}d)"
     )
 
 

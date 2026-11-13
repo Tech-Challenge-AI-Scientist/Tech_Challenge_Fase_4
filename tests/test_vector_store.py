@@ -1,5 +1,9 @@
 from tech_challenge_fase4.documentos import construir_documentos
-from tech_challenge_fase4.retriever import buscar, formatar_contexto, montar_where
+from tech_challenge_fase4.retriever import (
+    buscar,
+    formatar_contexto,
+    montar_where,
+)
 from tech_challenge_fase4.vector_store import indexar, obter_colecao
 
 
@@ -7,9 +11,23 @@ def test_indexacao_retomavel(tmp_path, df_reviews, embedder):
     docs = construir_documentos(df_reviews)
     colecao = obter_colecao(tmp_path, "teste")
 
-    assert indexar(docs[:2], colecao, embedder, tamanho_lote=1, mostrar_progresso=False) == 2
+    assert (
+        indexar(
+            docs[:2],
+            colecao,
+            embedder,
+            tamanho_lote=1,
+            mostrar_progresso=False,
+        )
+        == 2
+    )
     # segunda execução só indexa o que falta
-    assert indexar(docs, colecao, embedder, tamanho_lote=2, mostrar_progresso=False) == 3
+    assert (
+        indexar(
+            docs, colecao, embedder, tamanho_lote=2, mostrar_progresso=False
+        )
+        == 3
+    )
     assert indexar(docs, colecao, embedder, mostrar_progresso=False) == 0
     assert colecao.count() == 5
 
@@ -20,7 +38,12 @@ def test_indexacao_retomavel(tmp_path, df_reviews, embedder):
 
 def test_buscar_com_filtros(tmp_path, df_reviews, embedder):
     colecao = obter_colecao(tmp_path, "teste")
-    indexar(construir_documentos(df_reviews), colecao, embedder, mostrar_progresso=False)
+    indexar(
+        construir_documentos(df_reviews),
+        colecao,
+        embedder,
+        mostrar_progresso=False,
+    )
 
     r = buscar("entrega atrasada", k=1, colecao=colecao, embedder=embedder)
     assert r[0]["id"] == "r1_o1"
@@ -63,9 +86,20 @@ def test_responder_usa_contexto_recuperado(tmp_path, df_reviews, embedder):
             return SimpleNamespace(text="resposta [1]")
 
     colecao = obter_colecao(tmp_path, "teste")
-    indexar(construir_documentos(df_reviews), colecao, embedder, mostrar_progresso=False)
+    indexar(
+        construir_documentos(df_reviews),
+        colecao,
+        embedder,
+        mostrar_progresso=False,
+    )
     llm = LLMFalso()
-    saida = responder("entrega atrasada", k=2, colecao=colecao, embedder=embedder, cliente=llm)
+    saida = responder(
+        "entrega atrasada",
+        k=2,
+        colecao=colecao,
+        embedder=embedder,
+        cliente=llm,
+    )
 
     assert saida["resposta"] == "resposta [1]"
     assert len(saida["fontes"]) == 2
@@ -77,8 +111,17 @@ def test_avaliacao(tmp_path, df_reviews, embedder):
     from tech_challenge_fase4.avaliacao import ConsultaTeste, avaliar
 
     colecao = obter_colecao(tmp_path, "teste")
-    indexar(construir_documentos(df_reviews), colecao, embedder, mostrar_progresso=False)
-    consultas = [ConsultaTeste("entrega atrasada", lambda m: m["review_score"] <= 2, "nota baixa")]
+    indexar(
+        construir_documentos(df_reviews),
+        colecao,
+        embedder,
+        mostrar_progresso=False,
+    )
+    consultas = [
+        ConsultaTeste(
+            "entrega atrasada", lambda m: m["review_score"] <= 2, "nota baixa"
+        )
+    ]
     df = avaliar(k=1, consultas=consultas, colecao=colecao, embedder=embedder)
     assert df.loc[0, "precisao@1"] == 1.0
     assert df.loc[0, "top1"].startswith("Título: Atrasou")

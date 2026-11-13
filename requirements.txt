@@ -12,8 +12,8 @@ tqdm>=4.66
 
 # Desenvolvimento
 pytest>=8.0
-black
-flake8
+black==25.1.0
+flake8==7.2.0
 isort
 pip
 
