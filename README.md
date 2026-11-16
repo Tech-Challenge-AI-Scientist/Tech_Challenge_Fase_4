@@ -93,13 +93,13 @@ O comando completo gera embeddings com o Gemini e persiste a coleção no Chroma
 python -m tech_challenge_fase4.vector_store
 ```
 
-Para validar o fluxo com os primeiros 500 documentos antes de indexar a base completa:
+Para testar o fluxo com uma amostra dos primeiros 300 documentos antes de indexar a base completa:
 
 ```bash
-python -m tech_challenge_fase4.vector_store --limite 500
+python -m tech_challenge_fase4.vector_store --limite 300
 ```
 
-A indexação é retomável: documentos já presentes na coleção são ignorados em execuções seguintes. `--recriar` apaga a coleção atual antes de indexar novamente. A pasta do vector store não é versionada.
+A opção `--limite` restringe quantos documentos recebem embeddings durante a construção do índice. A indexação é retomável: documentos já presentes na coleção são ignorados em execuções seguintes. `--recriar` apaga a coleção atual antes de indexar novamente. A pasta do vector store não é versionada.
 
 ### 6. Executar a RAG
 
@@ -187,7 +187,9 @@ O modelo de embedding é `gemini-embedding-001`, com saída de 768 dimensões e 
 
 Para cada pergunta, a aplicação gera um embedding, busca no ChromaDB as `k` avaliações mais similares e monta um contexto numerado. A resposta cita as avaliações por `[n]`; uma legenda relaciona cada número citado ao `review_id` e ao `order_id` reais. Por custo e desempenho, a geração usa uma amostra de tamanho `k`, não a base inteira; as contagens se referem à amostra recuperada.
 
-Embeddings e geração usam a API Gemini. O projeto seleciona modelos da família Flash, descritos como relativamente baratos e eficazes para a tarefa, e o README anterior mencionava disponibilidade de free trial diária no Google AI Studio. Há uma divergência de configuração a observar: `tech_challenge_fase4/config.py` define `gemini-3.5-flash` como default do LLM, enquanto `.env.example` traz `LLM_MODEL=gemini-2.5-flash` comentado e a descrição anterior citava também versões 3.6, 3.7 e 3.8. O valor efetivo pode ser definido pela variável `LLM_MODEL`; confirme no Google AI Studio qual modelo está disponível para sua chave.
+Embeddings e geração usam a API Gemini. O Google AI Studio disponibiliza uma cota gratuita para experimentar a API, sujeita aos limites vigentes para o modelo e a conta. Durante a fase de testes, recomenda-se construir o índice com cerca de 300 documentos usando `--limite 300`; isso reduz as chamadas de embedding. Esse parâmetro é diferente de `--k`, que define quantas avaliações são recuperadas por pergunta (30 por padrão). Aumentar `--k` amplia o contexto enviado ao modelo e não aumenta o limite gratuito da API.
+
+Ao usar a cota gratuita, erros `429 Too Many Requests` podem ocorrer quando os limites de requisições ou de uso forem atingidos. Aguarde antes de tentar novamente e reduza o volume ou o ritmo das chamadas; o tamanho da cota e os limites dependem do modelo e podem mudar. Há também uma divergência de configuração a observar: `tech_challenge_fase4/config.py` define `gemini-3.5-flash` como default do LLM, enquanto `.env.example` traz `LLM_MODEL=gemini-2.5-flash` comentado. O valor efetivo pode ser definido pela variável `LLM_MODEL`; confirme no Google AI Studio qual modelo está disponível para sua chave.
 
 ### 5. Avaliar
 
