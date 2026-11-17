@@ -189,7 +189,7 @@ Para cada pergunta, a aplicação gera um embedding, busca no ChromaDB as `k` av
 
 Embeddings e geração usam a API Gemini. O Google AI Studio disponibiliza uma cota gratuita para experimentar a API, sujeita aos limites vigentes para o modelo e a conta. Durante a fase de testes, recomenda-se construir o índice com cerca de 300 documentos usando `--limite 300`; isso reduz as chamadas de embedding. Esse parâmetro é diferente de `--k`, que define quantas avaliações são recuperadas por pergunta (30 por padrão). Aumentar `--k` amplia o contexto enviado ao modelo e não aumenta o limite gratuito da API.
 
-Por serem modelos relativamente baratos, contando, inclusive, com uma free trial diária no Google AI Studio, e por terem demonstrado eficácia nos testes deste projeto, a RAG utiliza os modelos da família flash do Gemini. Por padrão, está configurado o modelo gemini-3.5-flash, porém, pode ser substituído por outras versões do mesmo, como a 3.6, 3.7 e 3.8.
+Por serem modelos relativamente baratos, contando, inclusive, com uma cota gratuíta diária no Google AI Studio, e por terem demonstrado eficácia nos testes deste projeto, a RAG utiliza os modelos da família flash do Gemini. Por padrão, está configurado o modelo gemini-3.5-flash, porém, pode ser substituído por outras versões da mesma família, como a 3.6, 3.7 e 3.8.
 
 Ao usar a cota gratuita, erros `429 Too Many Requests` podem ocorrer quando os limites de requisições ou de uso forem atingidos. Aguarde antes de tentar novamente e reduza o volume ou o ritmo das chamadas; o tamanho da cota e os limites dependem do modelo e podem mudar. 
 
@@ -269,8 +269,5 @@ python -m black --check tech_challenge_fase4 tests
 ```
 
 O comando `make format` aplica isort e Black; `make lint` executa Flake8, isort em modo de verificação e Black em modo de verificação. Esses atalhos requerem `make` disponível no sistema. No Windows, os comandos `python -m` acima podem ser usados diretamente no PowerShell.
-
-Execute as verificações depois de alterar o código e aplique a formatação antes de compartilhar as mudanças.
-
 
 
